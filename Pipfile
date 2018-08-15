@@ -10,6 +10,7 @@ wtforms = "*"
 sqlalchemy = "*"
 flask-sqlalchemy = "*"
 cymysql = "*"
+greenlet = "*"
 
 [dev-packages]
 

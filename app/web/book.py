@@ -9,28 +9,41 @@
 
 from flask import jsonify, request
 from app.libs.utils import is_isbn_or_key
-from app.spider.yushu_book import YunShuBook
+from app.spider.yushu_book import YuShuBook
+from app.view_models.book import BookCollection
 from app.web import web
 from app.forms.book import SearchForms
 
+from app.libs.non_local import n
 
 @web.route('/book/search')
 def search():
-    '''
-    :param q:  key words, or isbn
-    :param page:  specified page
-    :param ?q=isbn&page=1
-    :return: book object
-    '''
-    form = SearchForms(request.args)
-    if form.validate():
-        q = form.q.data.strip()
-        page = form.page.data
-        isbn_or_key = is_isbn_or_key(q)
-        if isbn_or_key == 'isbn':
-            result = YunShuBook.search_by_isbn(q)
-        else:
-            result = YunShuBook.search_by_kw(q, page)
-        return jsonify(result)
-    else:
-        return jsonify(form.errors)
+        f = SearchForms(request.args)
+        isbn_keyword = ''
+        q = ''
+        page = ''
+        book = BookCollection()
+        yushu = YuShuBook()
+
+        if request.method == 'GET' and f.validate():
+            q = f.q.data
+            page = f.page.data
+            isbn_keyword = is_isbn_or_key(q)
+
+            if isbn_keyword == 'isbn':
+                yushu.search_by_isbn(q)
+
+            elif isbn_keyword == 'keyword':
+                yushu.search_by_keyword(q, page)
+            book.fill(yushu, q)
+
+
+@web.route('/test')
+def test():
+    print(n.view)
+    n.view = 2
+    print('----------------')
+    print(getattr(request, 'view', None))
+    setattr(request, 'view', 2)
+    print('----------------')
+    return ''

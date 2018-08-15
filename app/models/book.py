@@ -23,6 +23,9 @@ class Book(db.Model):
     pubdate = Column(DATETIME)
     image = Column(String(50))
 
+    def __init__(self):
+        pass
+
     def __str__(self):
         pass
 
