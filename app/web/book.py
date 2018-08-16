@@ -7,43 +7,42 @@
 """
 
 
-from flask import jsonify, request
-from app.libs.utils import is_isbn_or_key
-from app.spider.yushu_book import YuShuBook
-from app.view_models.book import BookCollection
+from flask import request, jsonify, render_template
 from app.web import web
-from app.forms.book import SearchForms
+from app.forms.book import BookForm
+from app.lib.helper import is_isbn_keyword
+from app.spider.Yunshu import YuShuBook
+from app.view_models.book import BookCollection
 
-from app.libs.non_local import n
+
+@web.route('/book/<isbn>/detail')
+def book_detail(isbn):
+    yushu = YuShuBook()
+    book = BookCollection()
+    yushu.search_by_isbn(isbn)
+    book.fill(yushu, isbn)
+    return render_template('book_detail.html', book=book, wishs='', gifts='')
+
 
 @web.route('/book/search')
 def search():
-        f = SearchForms(request.args)
+        f = BookForm(request.args)
         isbn_keyword = ''
         q = ''
         page = ''
-        book = BookCollection()
+        books = BookCollection()
         yushu = YuShuBook()
 
         if request.method == 'GET' and f.validate():
             q = f.q.data
             page = f.page.data
-            isbn_keyword = is_isbn_or_key(q)
+            isbn_keyword = is_isbn_keyword(q)
 
             if isbn_keyword == 'isbn':
                 yushu.search_by_isbn(q)
 
             elif isbn_keyword == 'keyword':
                 yushu.search_by_keyword(q, page)
-            book.fill(yushu, q)
+            books.fill(yushu, q)
 
-
-@web.route('/test')
-def test():
-    print(n.view)
-    n.view = 2
-    print('----------------')
-    print(getattr(request, 'view', None))
-    setattr(request, 'view', 2)
-    print('----------------')
-    return ''
+        return render_template('search_result.html', books=books)
